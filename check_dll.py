@@ -18,11 +18,11 @@ def check_arrays(dll):
 
     # Test array_sum
     dll.array_sum.restype = ctypes.c_double
-    dll.sqr.argtypes = [ctypes.c_long, arr_type]
+    dll.sqr.argtypes = [ctypes.c_uint64, arr_type]
     assert dll.array_sum(5, arr) == 15.0
 
     # Test array_set
-    dll.array_set.argtypes = [ctypes.c_long, arr_type, ctypes.c_double]
+    dll.array_set.argtypes = [ctypes.c_uint64, arr_type, ctypes.c_double]
     dll.array_set(5, arr, ctypes.c_double(3.0))
     assert list(arr) == [3.0] * 5
 
