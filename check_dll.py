@@ -30,6 +30,21 @@ def check_arrays(dll):
     dll.array3_zero(arr)
     assert list(arr) == [0.0, 0.0, 0.0, 3.0, 3.0]
 
+    # Test array_concat
+    dll.array_concat.argtypes = [ctypes.c_uint64, ctypes.c_double * 2, 
+                                 ctypes.c_uint64, ctypes.c_double * 3]
+    dll.array_concat.restype = ctypes.POINTER(ctypes.c_double * 5)
+    arr1 = (ctypes.c_double * 2)(*[1.0, 2.0])
+    arr2 = (ctypes.c_double * 3)(*[3.0, 4.0, 5.0])
+    res = dll.array_concat(2, arr1, 3, arr2)
+    assert list(res.contents) == [1.0, 2.0, 3.0, 4.0, 5.0]
+
+    # Test array5_fill
+    dll.array5_fill.argtypes = [ctypes.c_double]
+    dll.array5_fill.restype = ctypes.POINTER(ctypes.c_double * 5)
+    arr = dll.array5_fill(2.5)
+    assert list(arr.contents) == [2.5] * 5
+
 
 def check_complex(dll):
     # Complex struct
@@ -88,12 +103,43 @@ def check_counter(dll):
     assert dll.counter_get(counter) == 1
 
 
+def check_counter_oop(dll):
+    dll.counter_new.restype = ctypes.c_void_p
+    dll.counter_get.argtypes = [ctypes.c_void_p]
+    dll.counter_increment.argtypes = [ctypes.c_void_p]
+
+    class Counter:
+        _dll = dll
+
+        def __init__(self):
+            self._counter = self._dll.counter_new()
+
+        def get(self):
+            return self._dll.counter_get(self._counter)
+
+        def increment(self):
+            self._dll.counter_increment(self._counter)
+
+    # Create an instance
+    counter = Counter()
+
+    # Get value
+    assert counter.get() == 0
+
+    # Increment value
+    counter.increment()
+
+    # Get value
+    assert counter.get() == 1
+
+
 if __name__ == "__main__":
     dll = ctypes.CDLL("./target/release/rust_dll_example.dll")
 
     check_base(dll)
     check_arrays(dll)
     check_complex(dll)
-    check_counter(dll)    
+    check_counter(dll) 
+    check_counter_oop(dll)   
 
     print("OK")

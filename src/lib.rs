@@ -1,6 +1,10 @@
+#![feature(test)]
+extern crate test;
+
 pub mod arrays;
 pub mod complex;
 pub mod counter;
+pub mod levenshtein;
 
 
 #[no_mangle]

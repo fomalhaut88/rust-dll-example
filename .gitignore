@@ -1,2 +1,11 @@
+*~
+*.pyc
+__pycache__
+
 /target
 /Cargo.lock
+
+/.venv/
+/build/
+/dist/
+*.egg-info
