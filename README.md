@@ -518,7 +518,7 @@ python setup.py sdist
 After that the file `dist/rust-dll-example-0.1.0.tar.gz` will appear. It can be installed with `pip` and distributed on [PyPI](https://pypi.org/). In order to upload it on PyPI, run the following command:
 
 ```
-twine upload dist/rust-dll-example-0.1.0.tar.gz
+twine upload dist/rust-dll-example-0.1.1.tar.gz
 ```
 
 After that the project will be available on https://pypi.org/project/rust-dll-example/.
