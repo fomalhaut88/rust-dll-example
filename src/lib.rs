@@ -7,14 +7,14 @@ pub mod counter;
 pub mod levenshtein;
 
 
-#[no_mangle]
-pub extern fn add(left: usize, right: usize) -> usize {
+#[unsafe(no_mangle)]
+pub extern "C" fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
 
-#[no_mangle]
-pub extern fn sqr(x: f64) -> f64 {
+#[unsafe(no_mangle)]
+pub extern "C" fn sqr(x: f64) -> f64 {
     x * x
 }
 

@@ -4,23 +4,20 @@ struct Counter {
 
 
 impl Counter {
-    #[no_mangle]
-    #[export_name="counter_new"]
-    pub extern fn new() -> Box<Self> {
+    #[unsafe(export_name="counter_new")]
+    pub extern "C" fn new() -> Box<Self> {
         Box::new(Self {
             val: 0,
         })
     }
 
-    #[no_mangle]
-    #[export_name="counter_get"]
-    pub extern fn get(&self) -> usize {
+    #[unsafe(export_name="counter_get")]
+    pub extern "C" fn get(&self) -> usize {
         self.val
     }
 
-    #[no_mangle]
-    #[export_name="counter_increment"]
-    pub extern fn increment(&mut self) {
+    #[unsafe(export_name="counter_increment")]
+    pub extern "C" fn increment(&mut self) {
         self.val += 1;
     }
 }

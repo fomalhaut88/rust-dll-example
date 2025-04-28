@@ -13,11 +13,11 @@ Here I am providing a number of examples to compile [DLL](https://en.wikipedia.o
 crate-type = ["cdylib"]
 ```
 
-3. Add `#[no_mangle]` and `extern` to the exporting functions like this:
+3. Add `#[unsafe(no_mangle)]` and `extern "C"` to the exporting functions like this:
 
 ```rust
-#[no_mangle]
-pub extern fn add(left: usize, right: usize) -> usize {
+#[unsafe(no_mangle)]
+pub extern "C" fn add(left: usize, right: usize) -> usize {
     left + right
 }
 ```
@@ -33,16 +33,16 @@ It is a good practice to cover your functions with standard Rust tests and bench
 Here are two plain functions written in Rust:
 
 ```rust
-//! An addition of two unsigned integer numbers.
-#[no_mangle]
-pub extern fn add(left: usize, right: usize) -> usize {
+/// An addition of two unsigned integer numbers.
+#[unsafe(no_mangle)]
+pub extern "C" fn add(left: usize, right: usize) -> usize {
     left + right
 }
 
 
-//! Square of a float value.
-#[no_mangle]
-pub extern fn sqr(x: f64) -> f64 {
+/// Square of a float value.
+#[unsafe(no_mangle)]
+pub extern "C" fn sqr(x: f64) -> f64 {
     x * x
 }
 ```
@@ -72,9 +72,9 @@ Notice, that for `sqr` function we had to specify input and output types explici
 There are two ways to handle arrays: by reference (norammly for fixed size arrays) and by pointer (it the size is unknown or mutable from call to call), and both a supported in DLLs.
 
 ```rust
-//! Sum of elements of an array given by pointer and the size.
-#[no_mangle]
-pub extern fn array_sum(size: usize, arr: *const f64) -> f64 {
+/// Sum of elements of an array given by pointer and the size.
+#[unsafe(no_mangle)]
+pub extern "C" fn array_sum(size: usize, arr: *const f64) -> f64 {
     let mut res = 0.0;
     for idx in 0..size {
         unsafe {
@@ -85,9 +85,9 @@ pub extern fn array_sum(size: usize, arr: *const f64) -> f64 {
 }
 
 
-//! Fill the given array with a float value.
-#[no_mangle]
-pub extern fn array_set(size: usize, arr: *mut f64, val: f64) {
+/// Fill the given array with a float value.
+#[unsafe(no_mangle)]
+pub extern "C" fn array_set(size: usize, arr: *mut f64, val: f64) {
     for idx in 0..size {
         unsafe {
             *arr.offset(idx as isize) = val;
@@ -96,32 +96,18 @@ pub extern fn array_set(size: usize, arr: *mut f64, val: f64) {
 }
 
 
-//! Set elements of a fixed size array to zeros.
-#[no_mangle]
-pub extern fn array3_zero(arr: &mut [f64; 3]) {
+/// Set elements of a fixed size array to zeros.
+#[unsafe(no_mangle)]
+pub extern "C" fn array3_zero(arr: &mut [f64; 3]) {
     for idx in 0..arr.len() {
         arr[idx] = 0.0;
     }
 }
 
 
-//! Concatenate two arrays.
-#[no_mangle]
-pub extern fn array_concat(size1: usize, arr1: *const f64,
-                           size2: usize, arr2: *const f64) -> *const f64 {
-    let mut res = Vec::with_capacity(size1 + size2);
-    res.resize(size1 + size2, 0.0);
-    unsafe {
-        ptr::copy(arr1, res.as_mut_ptr(), size1);
-        ptr::copy(arr2, res.as_mut_ptr().add(size1), size2);
-    }
-    Box::new(res).as_ptr()
-}
-
-
-//! Return fixed size array filled with the given value.
-#[no_mangle]
-pub extern fn array5_fill(val: f64) -> Box<[f64; 5]> {
+/// Return fixed size array filled with the given value.
+#[unsafe(no_mangle)]
+pub extern "C" fn array5_fill(val: f64) -> Box<[f64; 5]> {
     Box::new([val; 5])
 }
 ```
@@ -149,15 +135,6 @@ assert list(arr) == [3.0] * 5
 dll.array3_zero(arr)
 assert list(arr) == [0.0, 0.0, 0.0, 3.0, 3.0]
 
-# Test array_concat
-dll.array_concat.argtypes = [ctypes.c_uint64, ctypes.c_double * 2, 
-                             ctypes.c_uint64, ctypes.c_double * 3]
-dll.array_concat.restype = ctypes.POINTER(ctypes.c_double * 5)
-arr1 = (ctypes.c_double * 2)(*[1.0, 2.0])
-arr2 = (ctypes.c_double * 3)(*[3.0, 4.0, 5.0])
-res = dll.array_concat(2, arr1, 3, arr2)
-assert list(res.contents) == [1.0, 2.0, 3.0, 4.0, 5.0]
-
 # Test array5_fill
 dll.array5_fill.argtypes = [ctypes.c_double]
 dll.array5_fill.restype = ctypes.POINTER(ctypes.c_double * 5)
@@ -184,14 +161,14 @@ pub struct Complex {
 }
 
 
-#[no_mangle]
-pub extern fn complex_len(z: Complex) -> f64 {
+#[unsafe(no_mangle)]
+pub extern "C" fn complex_len(z: Complex) -> f64 {
     (z.x * z.x + z.y * z.y).sqrt()
 }
 
 
-#[no_mangle]
-pub extern fn complex_conj(z: Complex) -> Complex {
+#[unsafe(no_mangle)]
+pub extern "C" fn complex_conj(z: Complex) -> Complex {
     Complex {
         x: z.x,
         y: -z.y,
@@ -199,21 +176,18 @@ pub extern fn complex_conj(z: Complex) -> Complex {
 }
 
 impl Complex {
-    #[no_mangle]
-    #[export_name="complex_real"]
-    pub extern fn real(&self) -> f64 {
+    #[unsafe(export_name="complex_real")]
+    pub extern "C" fn real(&self) -> f64 {
         self.x
     }
 
-    #[no_mangle]
-    #[export_name="complex_image"]
-    pub extern fn image(&self) -> f64 {
+    #[unsafe(export_name="complex_image")]
+    pub extern "C" fn image(&self) -> f64 {
         self.y
     }
 
-    #[no_mangle]
-    #[export_name="complex_mul"]
-    pub extern fn mul(&mut self, val: f64) {
+    #[unsafe(export_name="complex_mul")]
+    pub extern "C" fn mul(&mut self, val: f64) {
         self.x *= val;
         self.y *= val;
     }
@@ -240,8 +214,6 @@ class Complex(ctypes.Structure):
     def __eq__(self, other):
         return self.x == other.x and self.y == other.y
 
-z = Complex(x=3.0, y=-4.0)
-
 # Test complex_len
 dll.complex_len.argtypes = [Complex]
 dll.complex_len.restype = ctypes.c_double
@@ -253,12 +225,14 @@ dll.complex_conj.restype = Complex
 assert dll.complex_conj(z) == Complex(x=3.0, y=4.0)
 
 # Test real
+dll.complex_real.argtypes = [ctypes.c_void_p]
 dll.complex_real.restype = ctypes.c_double
-assert dll.complex_real(z) == 3.0
+assert dll.complex_real(ctypes.byref(z)) == 3.0
 
 # Test image
+dll.complex_image.argtypes = [ctypes.c_void_p]
 dll.complex_image.restype = ctypes.c_double
-assert dll.complex_image(z) == -4.0
+assert dll.complex_image(ctypes.byref(z)) == -4.0
 
 # Test mul
 dll.complex_mul.argtypes = [ctypes.c_void_p, ctypes.c_double]
@@ -281,23 +255,20 @@ struct Counter {
 
 
 impl Counter {
-    #[no_mangle]
-    #[export_name="counter_new"]
-    pub extern fn new() -> Box<Self> {
+    #[unsafe(export_name="counter_new")]
+    pub extern "C" fn new() -> Box<Self> {
         Box::new(Self {
             val: 0,
         })
     }
 
-    #[no_mangle]
-    #[export_name="counter_get"]
-    pub extern fn get(&self) -> usize {
+    #[unsafe(export_name="counter_get")]
+    pub extern "C" fn get(&self) -> usize {
         self.val
     }
 
-    #[no_mangle]
-    #[export_name="counter_increment"]
-    pub extern fn increment(&mut self) {
+    #[unsafe(export_name="counter_increment")]
+    pub extern "C" fn increment(&mut self) {
         self.val += 1;
     }
 }
@@ -345,10 +316,9 @@ Usually, developers combine Python and a low-level programming language to impro
 use std::{cmp, slice};
 
 
-//! Levenshtain distance algorithm
-#[no_mangle]
-#[export_name="levenshtein_distance"]
-pub extern fn distance(n1: usize, p1: *const u8, 
+/// Levenshtain distance algorithm
+#[unsafe(export_name="levenshtein_distance")]
+pub extern "C" fn distance(n1: usize, p1: *const u8, 
                        n2: usize, p2: *const u8) -> usize {
     let s1 = unsafe { slice::from_raw_parts(p1, n1) };
     let s2 = unsafe { slice::from_raw_parts(p2, n2) };
@@ -357,7 +327,7 @@ pub extern fn distance(n1: usize, p1: *const u8,
 }
 
 
-//! Calculate Longest Common Subsequence length
+/// Calculate Longest Common Subsequence length
 pub fn lcs_solve<T: PartialEq>(s1: &[T], s2: &[T]) -> usize {
     let n1 = s1.len();
     let n2 = s2.len();

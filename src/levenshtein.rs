@@ -1,9 +1,8 @@
 use std::{cmp, slice};
 
 
-#[no_mangle]
-#[export_name="levenshtein_distance"]
-pub extern fn distance(n1: usize, p1: *const u8, 
+#[unsafe(export_name="levenshtein_distance")]
+pub extern "C" fn distance(n1: usize, p1: *const u8, 
                        n2: usize, p2: *const u8) -> usize {
     let s1 = unsafe { slice::from_raw_parts(p1, n1) };
     let s2 = unsafe { slice::from_raw_parts(p2, n2) };

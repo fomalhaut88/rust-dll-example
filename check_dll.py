@@ -30,15 +30,6 @@ def check_arrays(dll):
     dll.array3_zero(arr)
     assert list(arr) == [0.0, 0.0, 0.0, 3.0, 3.0]
 
-    # Test array_concat
-    dll.array_concat.argtypes = [ctypes.c_uint64, ctypes.c_double * 2, 
-                                 ctypes.c_uint64, ctypes.c_double * 3]
-    dll.array_concat.restype = ctypes.POINTER(ctypes.c_double * 5)
-    arr1 = (ctypes.c_double * 2)(*[1.0, 2.0])
-    arr2 = (ctypes.c_double * 3)(*[3.0, 4.0, 5.0])
-    res = dll.array_concat(2, arr1, 3, arr2)
-    assert list(res.contents) == [1.0, 2.0, 3.0, 4.0, 5.0]
-
     # Test array5_fill
     dll.array5_fill.argtypes = [ctypes.c_double]
     dll.array5_fill.restype = ctypes.POINTER(ctypes.c_double * 5)
@@ -73,12 +64,14 @@ def check_complex(dll):
     assert dll.complex_conj(z) == Complex(x=3.0, y=4.0)
 
     # Test real
+    dll.complex_real.argtypes = [ctypes.c_void_p]
     dll.complex_real.restype = ctypes.c_double
-    assert dll.complex_real(z) == 3.0
+    assert dll.complex_real(ctypes.byref(z)) == 3.0
 
     # Test image
+    dll.complex_image.argtypes = [ctypes.c_void_p]
     dll.complex_image.restype = ctypes.c_double
-    assert dll.complex_image(z) == -4.0
+    assert dll.complex_image(ctypes.byref(z)) == -4.0
 
     # Test mul
     dll.complex_mul.argtypes = [ctypes.c_void_p, ctypes.c_double]
@@ -93,6 +86,7 @@ def check_counter(dll):
 
     # Get value
     dll.counter_get.argtypes = [ctypes.c_void_p]
+    dll.counter_get.restype = ctypes.c_ulong
     assert dll.counter_get(counter) == 0
 
     # Increment value
@@ -106,6 +100,7 @@ def check_counter(dll):
 def check_counter_oop(dll):
     dll.counter_new.restype = ctypes.c_void_p
     dll.counter_get.argtypes = [ctypes.c_void_p]
+    dll.counter_get.restype = ctypes.c_ulong
     dll.counter_increment.argtypes = [ctypes.c_void_p]
 
     class Counter:
@@ -135,6 +130,7 @@ def check_counter_oop(dll):
 
 if __name__ == "__main__":
     dll = ctypes.CDLL("./target/release/rust_dll_example.dll")
+    # dll = ctypes.CDLL("./target/release/librust_dll_example.so")  # Use it on Linux
 
     check_base(dll)
     check_arrays(dll)
