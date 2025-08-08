@@ -1,3 +1,4 @@
+import sys
 import ctypes
 
 
@@ -129,8 +130,14 @@ def check_counter_oop(dll):
 
 
 if __name__ == "__main__":
-    dll = ctypes.CDLL("./target/release/rust_dll_example.dll")
-    # dll = ctypes.CDLL("./target/release/librust_dll_example.so")  # Use it on Linux
+    if sys.platform == 'linux':
+        dll_path = "./target/release/librust_dll_example.so"
+    elif sys.platform == 'win32':
+        dll_path = "./target/release/rust_dll_example.dll"
+    else:
+        raise OSError(f"Unknown platform: {sys.platform}")
+
+    dll = ctypes.CDLL(dll_path)
 
     check_base(dll)
     check_arrays(dll)
